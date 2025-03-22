@@ -1,10 +1,11 @@
 import React from 'react';
 import { Stage, Layer, Image } from 'react-konva';
 import Konva from 'konva';
+import { Button, ButtonGroup, Container } from 'react-bootstrap';
 import { Html } from 'react-konva-utils';
 
-const CanvasDrawing = () => {
-    const [tool, setTool] = React.useState('brush');
+const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }> = ({ children, queryCallback }) => {
+    const [tool, setTool] = React.useState<'brush' | 'eraser'>('brush');
     const isDrawing = React.useRef(false);
     const imageRef = React.useRef<Konva.Image>(null);
     const lastPos = React.useRef<{ x: number; y: number } | null>(null);
@@ -32,9 +33,7 @@ const CanvasDrawing = () => {
     };
 
     const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
-        if (!isDrawing.current) {
-            return;
-        }
+        if (!isDrawing.current) return;
 
         const image = imageRef.current;
         const stage = e.target.getStage();
@@ -66,7 +65,6 @@ const CanvasDrawing = () => {
         lastPos.current = pos;
 
         image?.getLayer()?.batchDraw();
-
     };
 
     const clearCanvas = () => {
@@ -76,17 +74,71 @@ const CanvasDrawing = () => {
         imageRef?.current?.getLayer()?.batchDraw();
     };
 
+    const getLowestElementPos = (): { x: number; y: number } | null => {
+        if (!context) return null;
+    
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const { width, height, data } = imageData;
+    
+        for (let y = height - 1; y >= 0; y--) {
+            for (let x = 0; x < width; x++) {
+                const index = (y * width + x) * 4;
+                const alpha = data[index + 3]; // alpha channel
+                if (alpha > 0) {
+                    return { x, y };
+                }
+            }
+        }
+        return null; // Canvas empty
+    };
+
+    const queryAI = async () => {
+
+        if (!context) return null;
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+        let lowestElementPos = getLowestElementPos();
+        if (!lowestElementPos) {
+            lowestElementPos = { x: 0, y: 0 };
+        }
+
+        const query = 'who invented the car?';
+        await queryCallback(query, lowestElementPos.x, lowestElementPos.y + 20);
+    }
+
     return (
-        <div>
-            <div className="tools">
-                <select
-                    value={tool}
-                    onChange={(e) => setTool(e.target.value)}
+        <Container fluid>
+            <div className="d-flex gap-3 align-items-center mb-3 pt-3">
+                <ButtonGroup>
+                    <Button
+                        variant={tool === 'brush' ? 'primary' : 'outline-secondary'}
+                        onClick={() => setTool('brush')}
+                    >
+                        Brush
+                    </Button>
+                    <Button
+                        variant={tool === 'eraser' ? 'primary' : 'outline-secondary'}
+                        onClick={() => setTool('eraser')}
+                    >
+                        Eraser
+                    </Button>
+                </ButtonGroup>
+
+                <Button
+                    variant="danger"
+                    className="ms-3"
+                    onClick={clearCanvas}
                 >
-                    <option value="brush">Brush</option>
-                    <option value="eraser">Eraser</option>
-                </select>
-                <button onClick={clearCanvas}>Clear Canvas</button>
+                    Clear Canvas
+                </Button>
+
+                <Button
+                    variant="success"
+                    className="ms-3"
+                    onClick={queryAI}
+                >
+                    Ask GPT!
+                </Button>
             </div>
 
             <Stage
@@ -106,25 +158,10 @@ const CanvasDrawing = () => {
                         x={0}
                         y={0}
                     />
-                    <Html>
-                        <div style={{ 
-                            padding: '10px',
-                            background: 'rgba(255, 255, 255, 0.8)',
-                            border: '1px solid #ddd',
-                            borderRadius: '4px',
-                            position: 'absolute',
-                            top: '20px',
-                            left: '500px',
-                        }}>
-                            <h3>My HTML Element</h3>
-                            <button onClick={() => console.log('Button clicked!')}>
-                                Click Me
-                            </button>
-                        </div>
-                    </Html>
+                    {children}
                 </Layer>
             </Stage>
-        </div>
+        </Container>
     );
 };
 
