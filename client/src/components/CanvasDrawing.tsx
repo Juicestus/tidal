@@ -1,11 +1,14 @@
-import React from 'react';
-import { Stage, Layer, Image } from 'react-konva';
+import React from 'react'; 
+import { Stage, Layer, Image, Rect } from 'react-konva';
 import Konva from 'konva';
 import { Button, ButtonGroup, Container } from 'react-bootstrap';
 import { Html } from 'react-konva-utils';
 
 const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }> = ({ children, queryCallback }) => {
     const [tool, setTool] = React.useState<'brush' | 'eraser'>('brush');
+    const [isLassoMode, setIsLassoMode] = React.useState(false);
+    // selectionRect stores the rectangular lasso selection as { x, y, width, height }
+    const [selectionRect, setSelectionRect] = React.useState<{ x: number; y: number; width: number; height: number } | null>(null);
     const isDrawing = React.useRef(false);
     const imageRef = React.useRef<Konva.Image>(null);
     const lastPos = React.useRef<{ x: number; y: number } | null>(null);
@@ -23,21 +26,50 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
         return { canvas, context };
     }, []);
 
-    const handleMouseDown: (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => void = (e) => {
+    const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+        const stage = e.target.getStage();
+        const pos = stage?.getPointerPosition();
+        if (!pos) return;
+
+        if (isLassoMode) {
+            // Begin rectangular selection
+            setSelectionRect({ x: pos.x, y: pos.y, width: 0, height: 0 });
+            return;
+        }
+
         isDrawing.current = true;
-        lastPos.current = e.target.getStage()?.getPointerPosition() || null;
+        lastPos.current = pos;
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+        if (isLassoMode) {
+            // Lasso (rectangle) completed – add your selection logic here.
+            console.log("Rectangular lasso completed:", selectionRect);
+            // Optionally, disable lasso mode automatically:
+            // setIsLassoMode(false);
+            return;
+        }
         isDrawing.current = false;
     };
 
     const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+        const stage = e.target.getStage();
+        const pos = stage?.getPointerPosition();
+        if (!pos) return;
+
+        if (isLassoMode) {
+            // If we have started a rectangle, update its width and height based on current pointer position.
+            if (selectionRect) {
+                const newWidth = pos.x - selectionRect.x;
+                const newHeight = pos.y - selectionRect.y;
+                setSelectionRect({ ...selectionRect, width: newWidth, height: newHeight });
+            }
+            return;
+        }
+
         if (!isDrawing.current) return;
 
         const image = imageRef.current;
-        const stage = e.target.getStage();
-
         if (!context) return;
 
         context.globalCompositeOperation =
@@ -50,20 +82,15 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
         };
 
         context.moveTo(localPos.x, localPos.y);
-
-        const pos = stage?.getPointerPosition();
-        if (!pos) return;
         const newLocalPos = {
             x: pos.x - (image ? image.x() : 0),
             y: pos.y - (image ? image.y() : 0),
         };
-
         context.lineTo(newLocalPos.x, newLocalPos.y);
         context.closePath();
         context.stroke();
 
         lastPos.current = pos;
-
         image?.getLayer()?.batchDraw();
     };
 
@@ -93,15 +120,12 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
     };
 
     const queryAI = async () => {
-
         if (!context) return null;
 
         let lowestElementPos = getLowestElementPos();
         if (!lowestElementPos) {
             lowestElementPos = { x: 0, y: 0 };
         }
-
-      
 
         await queryCallback(lowestElementPos.x, lowestElementPos.y + 20, canvas);
     }
@@ -123,6 +147,17 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
                         Eraser
                     </Button>
                 </ButtonGroup>
+
+                <Button
+                    variant={isLassoMode ? 'primary' : 'outline-secondary'}
+                    className="ms-3"
+                    onClick={() => {
+                        setIsLassoMode(!isLassoMode);
+                        setSelectionRect(null); // clear any existing rectangle
+                    }}
+                >
+                    {isLassoMode ? 'Cancel Lasso' : 'Lasso'}
+                </Button>
 
                 <Button
                     variant="danger"
@@ -159,6 +194,16 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
                         y={0}
                     />
                     {children}
+                    {isLassoMode && selectionRect && (
+                        <Rect 
+                            x={selectionRect.x}
+                            y={selectionRect.y}
+                            width={selectionRect.width}
+                            height={selectionRect.height}
+                            stroke="black"
+                            dash={[4, 4]}
+                        />
+                    )}
                 </Layer>
             </Stage>
         </Container>
