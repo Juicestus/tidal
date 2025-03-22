@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
-const InputText = () => {
+const MovableInputSidebar = () => {
     const [inputVisible, setInputVisible] = useState(false);
-
-    // This will hold the position of the input
     const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const [inputValue, setInputValue] = useState("");
+    const [items, setItems] = useState<string[]>([]);
 
     let isDragging = false;
     let offsetX: number = 0;
@@ -30,13 +32,10 @@ const InputText = () => {
         isDragging = false;
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (inputVisible) {
-            // Add event listeners when the input is visible
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
-
-            // Clean up event listeners when the component is unmounted
             return () => {
                 document.removeEventListener('mousemove', handleMouseMove);
                 document.removeEventListener('mouseup', handleMouseUp);
@@ -44,31 +43,56 @@ const InputText = () => {
         }
     }, [inputVisible]);
 
-    return (
-        <div>
-            <button className="show-input-btn" onClick={showInput}>
-                Open Movable Input
-            </button>
+    const handleAddItem = () => {
+        if (inputValue.trim()) {
+            setItems([...items, inputValue]);
+            setInputValue("");
+        }
+    };
 
-            {inputVisible && (
-                <input
-                    type="text"
-                    className="movable-input"
-                    placeholder="Type here..."
-                    style={{
-                        position: 'absolute',
-                        top: `${position.y}px`,
-                        left: `${position.x}px`,
-                        padding: '10px',
-                        border: '1px solid #ccc',
-                        fontSize: '16px',
-                        width: '200px',
-                    }}
-                    onMouseDown={handleMouseDown}
-                />
-            )}
+    return (
+        <div className="flex">
+            {/* Main Content */}
+            <div className="flex-1 flex justify-center items-center min-h-screen">
+                <div className="p-4 border rounded-lg shadow-lg bg-white relative">
+                    <Button onClick={showInput}>Open Movable Input</Button>
+                    {inputVisible && (
+                        <input
+                            type="text"
+                            className="movable-input border p-2 rounded-md w-64 absolute"
+                            placeholder="Type here..."
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            style={{
+                                top: `${position.y}px`,
+                                left: `${position.x}px`,
+                                padding: '10px',
+                                border: '1px solid #ccc',
+                                fontSize: '16px',
+                                width: '200px',
+                            }}
+                            onMouseDown={handleMouseDown}
+                        />
+                    )}
+                    <Button onClick={handleAddItem} className="ml-2">Add</Button>
+                </div>
+            </div>
+
+            {/* Sidebar */}
+            <div className="w-64 bg-gray-200 p-4 h-screen overflow-y-auto">
+                <h2 className="font-bold text-lg mb-2">Saved Items</h2>
+                {items.length === 0 ? (
+                    <p className="text-gray-500">No items yet.</p>
+                ) : (
+                    items.map((item, index) => (
+                        <Card key={index} className="mb-2">
+                            <CardContent className="p-2">{item}</CardContent>
+                        </Card>
+                    ))
+                )}
+            </div>
         </div>
     );
 };
 
-export default InputText;
+export default MovableInputSidebar;
