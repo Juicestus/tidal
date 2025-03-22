@@ -1,4 +1,4 @@
-# Tidal
+# Sketch Tutor
 
 ### Server
 
