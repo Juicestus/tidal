@@ -18,6 +18,14 @@ export default () => {
 
   // const [responses, setResponses] = useState<AIResponse[]>([]);
   const [response, setResponse] = useState<AIResponse>({ text: "", pos: { x: 0, y: 0 } });
+
+  const [responses, setResponses] = useState<AIResponse[]>([]);
+  useEffect(() => {
+    if (response.text) {
+      setResponses(prev => [...prev, response]);
+    }
+  }, [response]);
+
   const [loading, setLoading] = useState(false);
 
   const getNextResponse = async (x: number, y: number, canvas: HTMLCanvasElement) => {
@@ -33,6 +41,8 @@ export default () => {
     + "They may have completed multiple steps already.";
 
     const base64Image = canvas.toDataURL('image/jpeg', 1.0);
+
+    setResponse({ text: "", pos: { x, y } });
 
     const res = await fetch('http://localhost:3001/query', {
       method: 'POST',
@@ -64,7 +74,8 @@ export default () => {
             if (word === undefined) return;   // i dont fucking know
             setResponse(prev => ({
               ...prev,
-              text: prev.text + word
+              text: prev.text + word,
+              pos: { x, y }
             }));
           });
         } catch (e) {
@@ -78,7 +89,10 @@ export default () => {
   return (
     <div className="main">
         <DrawingCanvas queryCallback={getNextResponse}>
-          <CanvasElement xPos={0} yPos={0} content={response.text}/>
+          {/* <CanvasElement xPos={response.pos.x} yPos={response.pos.y} content={response.text}/> */}
+          {responses.map((response, i) => (
+            <CanvasElement key={i} xPos={response.pos.x} yPos={response.pos.y} content={response.text}/>
+          ))}
         </DrawingCanvas>
     </div>
   );
