@@ -13,13 +13,15 @@
     "@types/jest": "^27.5.2",
     "@types/node": "^16.11.65",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.18.2",
+    "node-fetch": "^2.7.0",
     "typescript": "^4.8.4"
   },
   "scripts": {
     "build": "tsc",
-    "serve": "node build/src/index.js",
-    "full": "tsc && node build/src/index.js"
+    "serve": "node build/index.js",
+    "full": "tsc && node build/index.js"
   },
   "eslintConfig": {
     "extends": [
@@ -43,6 +45,7 @@
     "node": "16"
   },
   "devDependencies": {
-    "@types/express": "^5.0.1"
+    "@types/express": "^5.0.1",
+    "@types/node-fetch": "^2.6.12"
   }
 }
