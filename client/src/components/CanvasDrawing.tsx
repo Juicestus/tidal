@@ -1,17 +1,28 @@
-import React from 'react'; 
+import React from 'react';
 import { Stage, Layer, Image, Rect } from 'react-konva';
 import Konva from 'konva';
-import { Button, ButtonGroup, Container } from 'react-bootstrap';
+import { Button, ButtonGroup, Container, Dropdown } from 'react-bootstrap';
 import { Html } from 'react-konva-utils';
+
+interface Stroke {
+    tool: 'brush' | 'eraser' | 'undo';
+    points: Array<{ x: number, y: number }>;
+    lineWidth: number;
+    strokeStyle: string;
+}
 
 const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }> = ({ children, queryCallback }) => {
     const [tool, setTool] = React.useState<'brush' | 'eraser'>('brush');
     const [isLassoMode, setIsLassoMode] = React.useState(false);
-    // selectionRect stores the rectangular lasso selection as { x, y, width, height }
+    // Add states for stroke history and current stroke
+    const [strokes, setStrokes] = React.useState<Stroke[]>([]);
+    const [currentStroke, setCurrentStroke] = React.useState<Stroke | null>(null);
     const [selectionRect, setSelectionRect] = React.useState<{ x: number; y: number; width: number; height: number } | null>(null);
     const isDrawing = React.useRef(false);
     const imageRef = React.useRef<Konva.Image>(null);
     const lastPos = React.useRef<{ x: number; y: number } | null>(null);
+
+    const [strokeWidth, setStrokeWidth] = React.useState<number>(5);
 
     const { canvas, context } = React.useMemo(() => {
         const canvas = document.createElement('canvas');
@@ -26,6 +37,14 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
         return { canvas, context };
     }, []);
 
+
+    React.useEffect(() => {
+        if (context) {
+            context.lineWidth = strokeWidth;
+        }
+    }
+        , [context, strokeWidth]);
+
     const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
         const stage = e.target.getStage();
         const pos = stage?.getPointerPosition();
@@ -39,7 +58,42 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
 
         isDrawing.current = true;
         lastPos.current = pos;
+
+        setCurrentStroke({
+            tool,
+            points: [{ x: pos.x, y: pos.y }],
+            lineWidth: strokeWidth,
+            strokeStyle: context?.strokeStyle?.toString() || '#df4b26'
+        });
     };
+
+    const undoStroke = () => {
+        if (strokes.length === 0) return;
+
+        const newStrokes = strokes.slice(0, strokes.length - 1);
+        setStrokes(newStrokes);
+
+        if (!context) return;
+
+        context?.clearRect(0, 0, canvas.width, canvas.height);
+        newStrokes.forEach(stroke => {
+
+            context.lineWidth = stroke.lineWidth;
+            context.strokeStyle = stroke.strokeStyle;
+            context.globalCompositeOperation = stroke.tool === 'eraser' ? 'destination-out' : 'source-over';
+
+            context?.beginPath();
+            context?.moveTo(stroke.points[0].x, stroke.points[0].y);
+            stroke.points.forEach(point => {
+                context?.lineTo(point.x, point.y);
+            });
+            context?.stroke();
+        })
+
+        imageRef.current?.getLayer()?.batchDraw();
+
+
+    }
 
     const handleMouseUp = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
         if (isLassoMode) {
@@ -50,6 +104,11 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
             return;
         }
         isDrawing.current = false;
+
+        if (currentStroke && currentStroke.points.length > 1) {
+            setStrokes([...strokes, currentStroke]);
+            setCurrentStroke(null);
+        }
     };
 
     const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
@@ -68,6 +127,13 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
         }
 
         if (!isDrawing.current) return;
+
+        if (currentStroke) {
+            setCurrentStroke({
+                ...currentStroke,
+                points: [...currentStroke.points, { x: pos.x, y: pos.y }]
+            });
+        }
 
         const image = imageRef.current;
         if (!context) return;
@@ -98,15 +164,16 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
         if (context) {
             context.clearRect(0, 0, canvas.width, canvas.height);
         }
+        setStrokes([]);
         imageRef?.current?.getLayer()?.batchDraw();
     };
 
     const getLowestElementPos = (): { x: number; y: number } | null => {
         if (!context) return null;
-    
+
         const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
         const { width, height, data } = imageData;
-    
+
         for (let y = height - 1; y >= 0; y--) {
             for (let x = 0; x < width; x++) {
                 const index = (y * width + x) * 4;
@@ -149,6 +216,58 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
                         Eraser
                     </Button>
                 </ButtonGroup>
+
+                <Dropdown style={{ width: 'auto' }}>
+                    <Dropdown.Toggle
+                        variant="outline-secondary"
+                        id="stroke-width-dropdown"
+                        style={{ minWidth: '40px' }}
+                    >
+                        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" version="1.1">
+                            <g className="layer">
+                                <title>Layer 1</title>
+                                <path d="m13.23,19.6c0,-1.21 0.98,-2.19 2.19,-2.19l70.63,0c1.21,0 2.18,0.98 2.18,2.19l0,3.44c0,1.21 -0.97,2.19 -2.18,2.19l-70.63,0c-1.21,0 -2.19,-0.98 -2.19,-2.19l0,-3.44z" fill-rule="evenodd" id="svg_1" />
+                                <path d="m13.23,39.49c0,-1.21 0.98,-2.19 2.19,-2.19l70.63,0c1.21,0 2.18,0.98 2.18,2.19l0,8.13c0,1.21 -0.97,2.18 -2.18,2.18l-70.63,0c-1.21,0 -2.19,-0.97 -2.19,-2.18l0,-8.13z" fill-rule="evenodd" id="svg_2" />
+                                <path d="m13.23,64.08c0,-1.21 0.98,-2.19 2.19,-2.19l70.63,0c1.21,0 2.18,0.98 2.18,2.19l0,17.5c0,1.21 -0.97,2.19 -2.18,2.19l-70.63,0c-1.21,0 -2.19,-0.98 -2.19,-2.19l0,-17.5z" fill-rule="evenodd" id="svg_3" />
+                            </g>
+                        </svg>
+                    </Dropdown.Toggle>
+
+                    <Dropdown.Menu style={{ minWidth: '120px' }}>
+                        <Dropdown.Item onClick={() => setStrokeWidth(2)}>
+                            <div className="d-flex align-items-center">
+                                <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="me-2">
+                                    <circle cx="12" cy="12" r="1" fill="#000" />
+                                </svg>
+                                2px
+                            </div>
+                        </Dropdown.Item>
+                        <Dropdown.Item onClick={() => setStrokeWidth(5)}>
+                            <div className="d-flex align-items-center">
+                                <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="me-2">
+                                    <circle cx="12" cy="12" r="2.5" fill="#000" />
+                                </svg>
+                                5px
+                            </div>
+                        </Dropdown.Item>
+                        <Dropdown.Item onClick={() => setStrokeWidth(10)}>
+                            <div className="d-flex align-items-center">
+                                <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="me-2">
+                                    <circle cx="12" cy="12" r="5" fill="#000" />
+                                </svg>
+                                10px
+                            </div>
+                        </Dropdown.Item>
+                    </Dropdown.Menu>
+                </Dropdown>
+
+                <Button
+                    onClick={undoStroke}
+                >
+                    Undo
+                </Button>
+
+
 
                 <Button
                     variant={isLassoMode ? 'primary' : 'outline-secondary'}
@@ -201,7 +320,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
                     />
                     {children}
                     {selectionRect && (
-                        <Rect 
+                        <Rect
                             x={selectionRect.x}
                             y={selectionRect.y}
                             width={selectionRect.width}
