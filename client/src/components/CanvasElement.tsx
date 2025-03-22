@@ -13,7 +13,7 @@ const CanvasElement = ({xPos, yPos, content}: {xPos: number, yPos: number, conte
             position: 'absolute',
             top: yPos + 'px',
             left: xPos + 'px',
-            width: 'auto',
+            width: '600px',
         }}>
             <p>{content}</p>
         </div>

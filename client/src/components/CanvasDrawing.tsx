@@ -121,16 +121,14 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
 
     const queryAI = async () => {
         if (!context) return null;
-        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
 
         let lowestElementPos = getLowestElementPos();
         if (!lowestElementPos) {
             lowestElementPos = { x: 0, y: 0 };
         }
 
-        const query = 'who invented the car?';
-        await queryCallback(query, lowestElementPos.x, lowestElementPos.y + 20);
-    };
+        await queryCallback(lowestElementPos.x, lowestElementPos.y + 20, canvas);
+    }
 
     return (
         <Container fluid>
