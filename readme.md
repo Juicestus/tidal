@@ -17,3 +17,4 @@ The client code is in the `./client` directory at `./client/src`.
 To run the development version of the frontent, use `npm run start`.
 
 To build the production frontent, use `npm run build`.
+
