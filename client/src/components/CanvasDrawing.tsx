@@ -46,7 +46,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
             // Lasso (rectangle) completed – add your selection logic here.
             console.log("Rectangular lasso completed:", selectionRect);
             // Optionally, disable lasso mode automatically:
-            // setIsLassoMode(false);
+            setIsLassoMode(false);
             return;
         }
         isDrawing.current = false;
@@ -154,11 +154,15 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
                     variant={isLassoMode ? 'primary' : 'outline-secondary'}
                     className="ms-3"
                     onClick={() => {
+                        if (selectionRect) {
+                            setSelectionRect(null);
+                            setIsLassoMode(false);
+                            return;
+                        }
                         setIsLassoMode(!isLassoMode);
-                        setSelectionRect(null); // clear any existing rectangle
                     }}
                 >
-                    {isLassoMode ? 'Cancel Lasso' : 'Lasso'}
+                    {selectionRect ? 'Clear Lasso' : isLassoMode ? 'Cancel Lasso' : 'Lasso'}
                 </Button>
 
                 <Button
@@ -196,7 +200,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
                         y={0}
                     />
                     {children}
-                    {isLassoMode && selectionRect && (
+                    {selectionRect && (
                         <Rect 
                             x={selectionRect.x}
                             y={selectionRect.y}
