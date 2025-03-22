@@ -17,7 +17,9 @@ const headers = {
 
 export const query = async (req: Request, res: Response) => {
   const { userMessage, imageBase64 } = req.body;
-  console.log(imageBase64)
+
+  // fs.writeFileSync('image.jpg', imageBase64, 'base64');
+  // console.log(imageBase64)
 
   const systemPrompt = "You are a helpful assistant that can process images and answer questions.";
 
