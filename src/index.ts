@@ -1,6 +1,12 @@
 import express from "express";
 import cors from "cors";
 import * as routes from "./routes";
+import { Request, Response, NextFunction } from 'express';
+
+export const asyncHandler = (fn: Function) => 
+  (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+};
 
 const app = express();
 const PORT = 3001;
@@ -10,7 +16,8 @@ app.use(express.json());
 app.use(cors());
 app.options("*", cors());
 
-app.use("/query", routes.query);
+
+app.post("/query", asyncHandler(routes.query));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
