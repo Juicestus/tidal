@@ -146,7 +146,16 @@ export default () => {
     setLoading(true);
 
     // const res = await fetch('http://localhost:3001/query', {
-    const res = await fetch('https://9c8e-165-91-13-152.ngrok-free.app/query', {
+    // const res = await fetch('https://9c8e-165-91-13-152.ngrok-free.app/query', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ 
+    //     userMessage: query,
+    //     imageBase64: base64Image,
+    //    })
+    // });
+
+    const res = await fetch('http://localhost:3001/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
