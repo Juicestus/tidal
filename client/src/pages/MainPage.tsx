@@ -309,11 +309,11 @@ export default () => {
                 border: "none",
                 fontSize: "16px",
                 cursor: "pointer",
-
+                color: "black",
               }}
               onClick={() => setShowInstructions(false)}
             >
-              X
+              <b className="x-button">X</b>
             </button>
             <h2>Welcome to Skutor</h2>
             <p>

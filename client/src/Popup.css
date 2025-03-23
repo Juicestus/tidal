@@ -26,3 +26,8 @@
     text-align: center;
   }
   
+
+  .x-button {
+    font-style: black;
+    color: black !important;
+  }
