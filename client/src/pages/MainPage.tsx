@@ -196,6 +196,7 @@ export default () => {
       + "Do not halucinate any information, only provide feedback on what they have written.\n"
       + "Do not mention anything about how you are a Large Language Model analyzing the image.\n"
       + "Dont do any computation for the student. Only output *next step* that the student should perform. Be fairly brief and to the point.\n"
+      + "Only output valid text and valid inline latex expressions. Do not output code or markdown."
       ;
 
     let canvas = cloneCanvas(realCanvas);
