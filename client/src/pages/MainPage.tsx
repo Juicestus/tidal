@@ -3,19 +3,7 @@ import DrawingCanvas from "../components/CanvasDrawing";
 import CanvasElement from "../components/CanvasElement";
 import Loading from "../components/Loading";
 import CanvasLoading from "../components/Loading";
-import "./Popup.css"; // Make sure this file is available and contains styles for .popup-overlay & .popup-content
-
-const PROD_SERVER_ADRESS = "https://tidal-y36e.onrender.com";
-const TEST_SERVER_ADRESS = "http://localhost:3001";
-
-const serverAdresses = {
-  production: PROD_SERVER_ADRESS,
-  development: TEST_SERVER_ADRESS,
-  test: TEST_SERVER_ADRESS,
-};
-
-const nodeEnv = "production";
-const api = (x: string): string => serverAdresses[nodeEnv] + "/" + x;
+import "../Popup.css"; // Make sure this file is available and contains styles for .popup-overlay & .popup-content
 
 const PROD_SERVER_ADRESS = "https://tidal-y36e.onrender.com";
 const TEST_SERVER_ADRESS = "http://localhost:3001";
@@ -291,6 +279,8 @@ export default () => {
     return <CanvasElement key={i} xPos={response.pos.x} yPos={response.pos.y} content={response.text} />
   }
 
+  const [showInstructions, setShowInstructions] = useState(true);
+
   return (
     <div
       className="main"
@@ -319,6 +309,7 @@ export default () => {
                 border: "none",
                 fontSize: "16px",
                 cursor: "pointer",
+
               }}
               onClick={() => setShowInstructions(false)}
             >
@@ -330,7 +321,7 @@ export default () => {
               draw a question on the canvas. The app will provide <br></br> you with specific step-by-step feedback.
             </p>
             <p>
-              Enjoy your Skutor
+              Enjoy your Skutor!
             </p>
           </div>
         </div>
