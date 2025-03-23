@@ -85,6 +85,37 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode; queryCallback: any; 
 
         if (!isDrawing.current) return;
 
+        // Calculate distance between current and last position to detect jumps
+        if (lastPos.current && currentStroke && currentStroke.points.length > 0) {
+            const distance = Math.sqrt(
+                Math.pow(pos.x - lastPos.current.x, 2) +
+                Math.pow(pos.y - lastPos.current.y, 2)
+            );
+
+            // If distance is greater than threshold (e.g., 40 pixels), end current stroke and start a new one
+            const jumpThreshold = 40;
+            if (distance > jumpThreshold) {
+                console.log(`Jump detected: ${distance.toFixed(2)}px`);
+
+                // End the current stroke
+                if (currentStroke.points.length > 1) {
+                    setStrokes([...strokes, currentStroke]);
+                }
+
+                // Start a new stroke at the current position
+                setCurrentStroke({
+                    tool,
+                    points: [{ x: pos.x, y: pos.y }],
+                    lineWidth: (tool === "brush" ? 1 : 5) * strokeWidth,
+                    strokeStyle: context?.strokeStyle?.toString() || '#000000',
+                });
+
+                // Update last position and return early to avoid connecting the jump
+                lastPos.current = pos;
+                return;
+            }
+        }
+
         if (currentStroke) {
             setCurrentStroke({
                 ...currentStroke,
@@ -188,11 +219,11 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode; queryCallback: any; 
             lowestElementPos = { x: 0, y: 0 };
         }
         console.log("Querying AI at position:", lowestElementPos);
-        await queryCallback(0, lowestElementPos.y + 30, canvas);
+        await queryCallback(20, lowestElementPos.y + 30, canvas);
     };
 
     return (
-        <Container fluid style={{ padding: 0 }}>
+        <>
             <Toolbar
                 tool={tool}
                 setTool={setTool}
@@ -201,45 +232,47 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode; queryCallback: any; 
                 clearCanvas={clearCanvas}
                 queryAI={queryAI}
             />
+            <Container fluid style={{ padding: 0 }}>
 
-            <Stage
-                width={stageWidth}
-                height={stageHeight}
-                onMouseDown={handleMouseDown}
-                onMousemove={handleMouseMove}
-                onMouseup={handleMouseUp}
-                onTouchStart={handleMouseDown}
-                onTouchMove={handleMouseMove}
-                onTouchEnd={handleMouseUp}
-            >
-                <Layer>
-                    <Image ref={imageRef} image={canvas} x={0} y={0} />
-                    {children}
-                    {selectionRect && (
-                        <Rect
-                            x={selectionRect.x}
-                            y={selectionRect.y}
-                            width={selectionRect.width}
-                            height={selectionRect.height}
-                            stroke="black"
-                            dash={[4, 4]}
-                        />
-                    )}
-                    {tool === 'eraser' && cursorPos && (
-                        <Circle
-                            x={cursorPos.x}
-                            y={cursorPos.y}
-                            radius={(strokeWidth * 5) / 2}
-                            stroke="rgba(0,0,0,0.5)"
-                            strokeWidth={1}
-                            dash={[4, 4]}
-                            listening={false}
-                        />
-                    )}
-                </Layer>
-            </Stage>
-        </Container>
-    );
+
+                <Stage
+                    width={stageWidth}
+                    height={stageHeight}
+                    onMouseDown={handleMouseDown}
+                    onMousemove={handleMouseMove}
+                    onMouseup={handleMouseUp}
+                    onTouchStart={handleMouseDown}
+                    onTouchMove={handleMouseMove}
+                    onTouchEnd={handleMouseUp}
+                >
+                    <Layer>
+                        <Image ref={imageRef} image={canvas} x={0} y={0} />
+                        {children}
+                        {selectionRect && (
+                            <Rect
+                                x={selectionRect.x}
+                                y={selectionRect.y}
+                                width={selectionRect.width}
+                                height={selectionRect.height}
+                                stroke="black"
+                                dash={[4, 4]}
+                            />
+                        )}
+                        {tool === 'eraser' && cursorPos && (
+                            <Circle
+                                x={cursorPos.x}
+                                y={cursorPos.y}
+                                radius={(strokeWidth * 5) / 2}
+                                stroke="rgba(0,0,0,0.5)"
+                                strokeWidth={1}
+                                dash={[4, 4]}
+                                listening={false}
+                            />
+                        )}
+                    </Layer>
+                </Stage>
+            </Container>
+        </>);
 };
 
 export default CanvasDrawing;
