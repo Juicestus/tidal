@@ -12,7 +12,7 @@ interface Stroke {
 }
 
 const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }> = ({ children, queryCallback }) => {
-    const [tool, setTool] = React.useState<'brush' | 'eraser'>('brush');
+    const [tool, setTool] = React.useState<'brush' | 'eraser' | 'lasso'>('brush');
     const [isLassoMode, setIsLassoMode] = React.useState(false);
     // Add states for stroke history and current stroke
     const [strokes, setStrokes] = React.useState<Stroke[]>([]);
@@ -40,17 +40,17 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
 
     React.useEffect(() => {
         if (context) {
-            context.lineWidth = strokeWidth;
+            context.lineWidth = (tool === "brush" ? 1 : 3) * strokeWidth;
         }
     }
-        , [context, strokeWidth]);
+        , [context, strokeWidth, tool]);
 
     const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
         const stage = e.target.getStage();
         const pos = stage?.getPointerPosition();
         if (!pos) return;
 
-        if (isLassoMode) {
+        if (tool == 'lasso') {
             // Begin rectangular selection
             setSelectionRect({ x: pos.x, y: pos.y, width: 0, height: 0 });
             return;
@@ -62,7 +62,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
         setCurrentStroke({
             tool,
             points: [{ x: pos.x, y: pos.y }],
-            lineWidth: strokeWidth,
+            lineWidth: (tool === "brush" ? 1 : 3) * strokeWidth,
             strokeStyle: context?.strokeStyle?.toString() || '#df4b26'
         });
     };
@@ -96,11 +96,8 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
     }
 
     const handleMouseUp = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
-        if (isLassoMode) {
-            // Lasso (rectangle) completed – add your selection logic here.
-            console.log("Rectangular lasso completed:", selectionRect);
-            // Optionally, disable lasso mode automatically:
-            setIsLassoMode(false);
+        if (tool == 'lasso') {
+
             return;
         }
         isDrawing.current = false;
@@ -116,7 +113,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
         const pos = stage?.getPointerPosition();
         if (!pos) return;
 
-        if (isLassoMode) {
+        if (tool == 'lasso') {
             // If we have started a rectangle, update its width and height based on current pointer position.
             if (selectionRect) {
                 const newWidth = pos.x - selectionRect.x;
@@ -199,6 +196,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
         await queryCallback(0, lowestElementPos.y + 20, canvas);
     }
 
+
     return (
         <Container fluid>
             <div className="d-flex gap-3 align-items-center mb-3 pt-3">
@@ -207,14 +205,51 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
                         variant={tool === 'brush' ? 'primary' : 'outline-secondary'}
                         onClick={() => setTool('brush')}
                     >
-                        Brush
+                        <img
+                            src="/pencil.svg"
+                            alt="Brush"
+                            style={{
+                                width: '24px',
+                                height: '24px',
+                                filter: tool === 'brush' ? 'brightness(0) invert(1)' : 'none'
+                            }}
+                        />
                     </Button>
                     <Button
                         variant={tool === 'eraser' ? 'primary' : 'outline-secondary'}
                         onClick={() => setTool('eraser')}
                     >
-                        Eraser
+                        <img
+                            src="/eraser.svg"
+                            alt="Eraser"
+                            style={{
+                                width: '24px',
+                                height: '24px',
+                                filter: tool === 'eraser' ? 'brightness(0) invert(1)' : 'none'
+                            }}
+                        />
                     </Button>
+                    {/* <Button
+                        variant={tool === 'lasso' ? 'primary' : 'outline-secondary'}
+                        onClick={() => {
+                            if (selectionRect) {
+                                setSelectionRect(null);
+                                setTool('brush'); // Reset to brush after clearing selection
+                                return;
+                            }
+                            setTool('lasso');
+                        }}
+                    >
+                        {selectionRect ? 'Clear Lasso' : <img
+                            src="/select.svg"
+                            alt="select"
+                            style={{
+                                width: '24px',
+                                height: '24px',
+                                filter: tool === 'lasso' ? 'brightness(0) invert(1)' : 'none'
+                            }}
+                        />}
+                    </Button> */}
                 </ButtonGroup>
 
                 <Dropdown style={{ width: 'auto' }}>
@@ -239,7 +274,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
                                 <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="me-2">
                                     <circle cx="12" cy="12" r="1" fill="#000" />
                                 </svg>
-                                2px
+                                Thin
                             </div>
                         </Dropdown.Item>
                         <Dropdown.Item onClick={() => setStrokeWidth(5)}>
@@ -247,7 +282,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
                                 <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="me-2">
                                     <circle cx="12" cy="12" r="2.5" fill="#000" />
                                 </svg>
-                                5px
+                                Medium
                             </div>
                         </Dropdown.Item>
                         <Dropdown.Item onClick={() => setStrokeWidth(10)}>
@@ -255,7 +290,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
                                 <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="me-2">
                                     <circle cx="12" cy="12" r="5" fill="#000" />
                                 </svg>
-                                10px
+                                Thick
                             </div>
                         </Dropdown.Item>
                     </Dropdown.Menu>
@@ -264,32 +299,32 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
                 <Button
                     onClick={undoStroke}
                 >
-                    Undo
+                    <img
+                        src="/arrow-rotate-left.svg"
+                        alt="Eraser"
+                        style={{
+                            width: '24px',
+                            height: '24px',
+                            filter: 'brightness(0) invert(1)'
+                        }}
+                    />
                 </Button>
 
-
-
-                <Button
-                    variant={isLassoMode ? 'primary' : 'outline-secondary'}
-                    className="ms-3"
-                    onClick={() => {
-                        if (selectionRect) {
-                            setSelectionRect(null);
-                            setIsLassoMode(false);
-                            return;
-                        }
-                        setIsLassoMode(!isLassoMode);
-                    }}
-                >
-                    {selectionRect ? 'Clear Lasso' : isLassoMode ? 'Cancel Lasso' : 'Lasso'}
-                </Button>
 
                 <Button
                     variant="danger"
                     className="ms-3"
                     onClick={clearCanvas}
                 >
-                    Clear Canvas
+                    <img
+                        src="/trash-can.svg"
+                        alt="Eraser"
+                        style={{
+                            width: '24px',
+                            height: '24px',
+                            filter: 'brightness(0) invert(1)'
+                        }}
+                    />
                 </Button>
 
                 <Button
@@ -297,7 +332,15 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
                     className="ms-3"
                     onClick={queryAI}
                 >
-                    Ask GPT!
+                    <img
+                        src="/lb.svg"
+                        alt="Eraser"
+                        style={{
+                            width: '30px',
+                            height: '30px',
+                            filter: 'brightness(0) invert(1)'
+                        }}
+                    />
                 </Button>
             </div>
 
