@@ -22,10 +22,14 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode; queryCallback: any; 
     const lastPos = React.useRef<{ x: number; y: number } | null>(null);
     const [strokeWidth, setStrokeWidth] = React.useState<number>(5);
 
+    // Replace dynamic dimensions with fixed large ones for an "infinite" scroll effect
+    const stageWidth = document.documentElement.clientWidth;
+    const stageHeight = 4096;
+
     const { canvas, context } = React.useMemo(() => {
         const canvas = document.createElement('canvas');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight - 50;
+        canvas.width = stageWidth;
+        canvas.height = stageHeight;
         const context = canvas.getContext('2d');
         if (context) {
             context.strokeStyle = '#000000';
@@ -37,7 +41,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode; queryCallback: any; 
 
     React.useEffect(() => {
         if (context) {
-            context.lineWidth = (tool === "brush" ? 1 : 3) * strokeWidth;
+            context.lineWidth = (tool === "brush" ? 1 : 5) * strokeWidth;
         }
     }, [context, strokeWidth, tool]);
 
@@ -57,7 +61,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode; queryCallback: any; 
         setCurrentStroke({
             tool,
             points: [{ x: pos.x, y: pos.y }],
-            lineWidth: (tool === "brush" ? 1 : 3) * strokeWidth,
+            lineWidth: (tool === "brush" ? 1 : 5) * strokeWidth,
             strokeStyle: context?.strokeStyle?.toString() || '#000000',
         });
     };
@@ -188,7 +192,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode; queryCallback: any; 
     };
 
     return (
-        <Container fluid>
+        <Container fluid style={{ padding: 0 }}>
             <Toolbar
                 tool={tool}
                 setTool={setTool}
@@ -199,8 +203,8 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode; queryCallback: any; 
             />
 
             <Stage
-                width={window.innerWidth}
-                height={window.innerHeight - 50}
+                width={stageWidth}
+                height={stageHeight}
                 onMouseDown={handleMouseDown}
                 onMousemove={handleMouseMove}
                 onMouseup={handleMouseUp}
@@ -225,7 +229,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode; queryCallback: any; 
                         <Circle
                             x={cursorPos.x}
                             y={cursorPos.y}
-                            radius={(strokeWidth * 3) / 2}
+                            radius={(strokeWidth * 5) / 2}
                             stroke="rgba(0,0,0,0.5)"
                             strokeWidth={1}
                             dash={[4, 4]}

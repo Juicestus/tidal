@@ -31,7 +31,7 @@ const Toolbar = ({ tool, setTool, strokeWidth, setStrokeWidth, undoStroke, clear
                     <img src="/pencil.svg" alt="Brush" style={{
                         ...fillButtonIconStyle(0.8),
                         filter: tool === 'brush' ? 'brightness(0) invert(1)' : 'none'
-                    }}/>
+                    }} />
                 </Button>
                 <Button
                     variant={tool === 'eraser' ? 'dark' : 'outline-secondary'}
@@ -40,7 +40,7 @@ const Toolbar = ({ tool, setTool, strokeWidth, setStrokeWidth, undoStroke, clear
                     <img src="/eraser.svg" alt="Eraser" style={{
                         ...fillButtonIconStyle(0.8),
                         filter: tool === 'eraser' ? 'brightness(0) invert(1)' : 'none'
-                    }}/>
+                    }} />
                 </Button>
             </ButtonGroup>
 
@@ -67,8 +67,32 @@ const Toolbar = ({ tool, setTool, strokeWidth, setStrokeWidth, undoStroke, clear
                 </Dropdown.Toggle>
                 <Dropdown.Menu>
                     {[2, 5, 10].map((size) => (
-                        <Dropdown.Item key={size} onClick={() => setStrokeWidth(size)} >
-                            <div className="d-flex align-items-center">
+                        <Dropdown.Item
+                            key={size}
+                            onClick={() => setStrokeWidth(size)}
+                            className="stroke-width-item"
+                            style={{
+                                backgroundColor: 'white',
+                                color: '#212529',
+                            }}
+                            active={false}
+                            as="button" // Ensures it's a button element for proper hover handling
+                        >
+                            <div
+                                className="d-flex align-items-center"
+                                style={{
+                                    transition: 'all 0.2s',
+                                    borderRadius: '4px', // Add rounded corners
+                                    width: '100%', // Ensure the highlight covers the full width
+                                    padding: '6px 8px', // Increase padding for better visual appearance
+                                }}
+                                onMouseOver={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#6c757d';
+                                }}
+                                onMouseOut={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                }}
+                            >
                                 <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="me-2">
                                     <circle cx="12" cy="12" r={size / 2} fill="#000" />
                                 </svg>

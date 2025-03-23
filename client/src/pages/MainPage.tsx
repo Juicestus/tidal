@@ -195,8 +195,19 @@ export default () => {
  }
 
   return (
-    <div className="main">
-        <DrawingCanvas queryCallback={getNextResponse} clearCallback={() => setResponses([])}>
+    <div 
+      className="main"
+      style={{
+        width: "100vw",
+        height: "100vh",
+        overflow: "auto"
+      }}
+    >
+        {/* The scrollable container wrapping the large canvas */}
+        <DrawingCanvas 
+          queryCallback={getNextResponse} 
+          clearCallback={() => setResponses([])}
+        >
           {responses.map(genResponse)}
         </DrawingCanvas>
     </div>
