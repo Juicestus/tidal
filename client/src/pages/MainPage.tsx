@@ -189,6 +189,8 @@ export default () => {
       + "Adjust the complexity of your explanation based on the difficulty of the content.\n"
       + "They may have completed steps already that you have guided them through. Continue by giving them the next step.\n"
       + "Multiple figures in the problem likely correspond to sequential steps in their work.\n"
+      + "If they box a step, assume it is their final answer.\n"
+      + "Do not require them to fully simplify the problem or check their work, you should tell them if it is correct.\n"
       + "If they have completed the problem, evaluate their work and ask them if they want to try something else.\n"
       + "If they have made a mistake at any step, provide feedback on their mistake and guide them through the next correct step.\n"
       + "Do not halucinate any information, only provide feedback on what they have written.\n"
@@ -198,12 +200,8 @@ export default () => {
 
 
 
-    const clonedCanvas = cloneCanvas(realCanvas);
-    let canvas = cropCanvasToContentWithPadding(clonedCanvas, 20);
-    if (canvas === null) {
-      console.log('Could not crop canvas');
-      canvas = clonedCanvas;
-    }
+    let canvas = cloneCanvas(realCanvas);
+    
 
     const ctx = canvas.getContext('2d');
     if (ctx) {
@@ -211,13 +209,19 @@ export default () => {
         console.log(response);
         if (response.text === "") continue;
         ctx.font = '14px Arial';
-        ctx.fillStyle = 'red';
+        ctx.fillStyle = 'white';
         // ctx.fillText(response.text, response.pos.x, response.pos.y + 30);
         wrapText(ctx, response.text, response.pos.x, response.pos.y + 30, 800, 24);
       }
     }
 
-    const base64Image = canvas.toDataURL('image/jpeg', 1.0);
+    let croppedCanvas = cropCanvasToContentWithPadding(canvas, 20);
+    if (croppedCanvas === null) {
+      console.log('Could not crop canvas');
+      croppedCanvas = canvas;
+    }
+
+    const base64Image = croppedCanvas.toDataURL('image/jpeg', 1.0);
 
     console.log(base64Image);
 
