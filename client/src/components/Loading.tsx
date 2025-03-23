@@ -18,7 +18,8 @@ const Loading = () => {
         height: '100%',
         width: '100%'
       }}>
-        <CircularProgress color="success" />
+        <CircularProgress   sx={{ filter: 'grayscale(100%)', color: '#222' }} 
+ />
       </div>
     );
   };

@@ -11,18 +11,35 @@ function cloneCanvas(oldCanvas: HTMLCanvasElement): HTMLCanvasElement {
   newCanvas.width = oldCanvas.width;
   newCanvas.height = oldCanvas.height;
 
-  // Get the 2D rendering context for the new canvas
+  // Get the 2D rendering context for both canvases
   const newCtx = newCanvas.getContext('2d');
+  const oldCtx = oldCanvas.getContext('2d');
 
-  if (!newCtx) {
-    throw new Error('Could not get 2D context for new canvas');
+  if (!newCtx || !oldCtx) {
+    throw new Error('Could not get 2D context');
   }
 
-  // Copy the content of the old canvas to the new canvas
+  // Draw the old canvas onto the new canvas
   newCtx.drawImage(oldCanvas, 0, 0);
+
+  // Get image data from the new canvas
+  const imageData = newCtx.getImageData(0, 0, newCanvas.width, newCanvas.height);
+  const data = imageData.data;
+
+  // Invert each pixel
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = 255 - data[i];     // Red
+    data[i + 1] = 255 - data[i + 1]; // Green
+    data[i + 2] = 255 - data[i + 2]; // Blue
+    // Alpha stays the same: data[i + 3]
+  }
+
+  // Put the inverted image data back on the canvas
+  newCtx.putImageData(imageData, 0, 0);
 
   return newCanvas;
 }
+
 
 function wrapText(
   ctx: CanvasRenderingContext2D,
