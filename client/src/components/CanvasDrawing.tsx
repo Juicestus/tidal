@@ -188,11 +188,11 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode; queryCallback: any; 
             lowestElementPos = { x: 0, y: 0 };
         }
         console.log("Querying AI at position:", lowestElementPos);
-        await queryCallback(0, lowestElementPos.y + 30, canvas);
+        await queryCallback(20, lowestElementPos.y + 30, canvas);
     };
 
     return (
-        <Container fluid style={{ padding: 0 }}>
+        <>
             <Toolbar
                 tool={tool}
                 setTool={setTool}
@@ -201,6 +201,8 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode; queryCallback: any; 
                 clearCanvas={clearCanvas}
                 queryAI={queryAI}
             />
+        <Container fluid style={{ padding: 0 }}>
+        
 
             <Stage
                 width={stageWidth}
@@ -239,7 +241,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode; queryCallback: any; 
                 </Layer>
             </Stage>
         </Container>
-    );
+    </>);
 };
 
 export default CanvasDrawing;

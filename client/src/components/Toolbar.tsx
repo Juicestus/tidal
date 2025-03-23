@@ -1,12 +1,14 @@
 import React from 'react';
 import { Button, ButtonGroup, Dropdown } from 'react-bootstrap';
+import { Html } from 'react-konva-utils';
 
 const iconStyle = { width: '20px', height: '20px', display: 'block', margin: '0 auto' };
-const fillButtonIconStyle = (scale: number) =>
-    ({ width: '100%', height: '100%', maxWidth: '20px', maxHeight: '20px', display: 'block', margin: '0 auto', transform: 'scale(' + scale + ')' });
+const fillButtonIconStyle = (scale: number, maxWidth: number = 20) =>
+    ({ width: '100%', height: '100%', maxWidth: '' + maxWidth + 'px', maxHeight: '20px', display: 'block', margin: '0 auto', transform: 'scale(' + scale + ')' });
 
 const Toolbar = ({ tool, setTool, strokeWidth, setStrokeWidth, undoStroke, clearCanvas, queryAI }: any) => {
-    return (
+    return (<>
+
         <div
             style={{
                 padding: '8px 16px',
@@ -110,9 +112,11 @@ const Toolbar = ({ tool, setTool, strokeWidth, setStrokeWidth, undoStroke, clear
                 <img src="/trash-can.svg" alt="Clear" style={fillButtonIconStyle(0.7)} />
             </Button>
             <Button variant="outline-secondary" size="lg" onClick={queryAI}>
-                <img src="/lb.svg" alt="Query" style={fillButtonIconStyle(1.25)} />
+                <img src="/lb.svg" alt="Query" style={fillButtonIconStyle(1.25, 40)} />
             </Button>
         </div>
+
+    </>
     );
 };
 
