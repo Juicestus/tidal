@@ -2,6 +2,8 @@ import { useEffect, useReducer, useState } from "react";
 import DrawingCanvas from "../components/CanvasDrawing";
 import CanvasElement from "../components/CanvasElement";
 import { Canvas } from "konva/lib/Canvas";
+import Loading from "../components/Loading";
+import CanvasLoading from "../components/Loading";
 
 function cloneCanvas(oldCanvas: HTMLCanvasElement): HTMLCanvasElement {
   // Create a new canvas element with the same dimensions
@@ -47,7 +49,6 @@ function wrapText(
   ctx.fillText(line, x, y);
 }
 
-
 interface Point {
   x: number;
   y: number;
@@ -67,7 +68,7 @@ export default () => {
 
   const [responses, setResponses] = useState<AIResponse[]>([]);
   useEffect(() => {
-    if (response.text) {
+    if (response.text !== "") {
       setResponses(prev => {
       const newResponses = [...prev];
       if (newResponses.length > 0) {
@@ -119,6 +120,8 @@ export default () => {
     console.log(base64Image);
 
     setResponse({ text: "", pos: { x, y } });
+    setLoading(true);
+
     const res = await fetch('http://localhost:3001/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -128,7 +131,6 @@ export default () => {
        })
     });
 
-    setLoading(true);
 
     const reader = res.body?.getReader();
     const decoder = new TextDecoder();
@@ -147,6 +149,7 @@ export default () => {
             const data = JSON.parse(cleared);
             const word = data['choices'][0]['delta']['content'];
             if (word === undefined) return;   // i dont fucking know
+            setLoading(false);
             setResponse(prev => ({
               ...prev,
               text: prev.text + word,
@@ -161,13 +164,17 @@ export default () => {
     }
   }
 
+ const genResponse = (response: AIResponse, i: number) => {
+        if (loading && i == responses.length - 1) 
+            return <CanvasLoading xPos={response.pos.x} yPos={response.pos.y}/>;
+        if (response.text === "") return (<></>);
+        return <CanvasElement key={i} xPos={response.pos.x} yPos={response.pos.y} content={response.text}/>
+ }
+
   return (
     <div className="main">
         <DrawingCanvas queryCallback={getNextResponse}>
-          {/* <CanvasElement xPos={response.pos.x} yPos={response.pos.y} content={response.text}/> */}
-          {responses.map((response, i) => (
-            response.text == "" ? (<></>) : <CanvasElement key={i} xPos={response.pos.x} yPos={response.pos.y} content={response.text}/>
-          ))}
+          {responses.map(genResponse)}
         </DrawingCanvas>
     </div>
   );

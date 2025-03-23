@@ -9,39 +9,15 @@ import { BlockMath, InlineMath } from 'react-katex';
 const CanvasElement = ({ xPos, yPos, content }: { xPos: number, yPos: number, content: string }) => {
     return (<Html>
         <div style={{
-            padding: '10px',
-            background: 'rgba(255, 255, 255, 0.8)',
+            padding: '16px',
+            background: 'rgba(255, 255, 255, 1.0)',
             border: '1px solid #ddd',
-            borderRadius: '4px',
+            borderRadius: '1rem',
             position: 'absolute',
             top: yPos + 'px',
             left: xPos + 'px',
-            width: '600px',
+            width: '800px',
         }}>
-            {/* <p>{content}</p> */}
-            {/* <p>
-            {content.split(/(\$\$.*?\$\$|\$.*?\$)/g).map((part, i) => {
-            if (part.startsWith('$$') && part.endsWith('$$')) {
-                return <BlockMath key={i}>{part.slice(2, -2)}</BlockMath>;
-            } else if (part.startsWith('$') && part.endsWith('$')) {
-                return <InlineMath key={i}>{part.slice(1, -1)}</InlineMath>;
-            } else {
-                return part;
-            }
-            })}
-            </p> */}
-            {/* <BlockMath math={content} /> */}
-
-            {/* <p>{
-                    renderMathInElement(content, {
-                        delimiters: [
-                          { left: "\\(", right: "\\)", display: false },
-                          { left: "\\[", right: "\\]", display: true }
-                        ],
-                        throwOnError: false
-                      })
-                }</p> */}
-
             <p>
                 {content.split(/(\\\(.+?\\\)|\\\[.+?\\\])/g).map((part, i) => {
                     // Inline math \( ... \)

@@ -196,7 +196,7 @@ const CanvasDrawing: React.FC<{ children?: React.ReactNode, queryCallback: any }
 
         console.log("Querying AI at position:", lowestElementPos);
 
-        await queryCallback(0, lowestElementPos.y + 20, canvas);
+        await queryCallback(0, lowestElementPos.y + 30, canvas);
     }
 
     return (
