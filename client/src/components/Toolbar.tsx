@@ -12,7 +12,7 @@ const Toolbar = ({ tool, setTool, strokeWidth, setStrokeWidth, undoStroke, clear
         <div
             style={{
                 padding: '8px 16px',
-                background: 'rgba(255, 255, 255, 0.95)',
+                background: 'rgba(255, 255, 255, 1.0)',
                 borderBottom: '1px solid #ccc',
                 display: 'flex',
                 alignItems: 'center',
