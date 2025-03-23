@@ -190,7 +190,7 @@ export default () => {
 
   return (
     <div className="main">
-        <DrawingCanvas queryCallback={getNextResponse}>
+        <DrawingCanvas queryCallback={getNextResponse} clearCallback={() => setResponses([])}>
           {responses.map(genResponse)}
         </DrawingCanvas>
     </div>
